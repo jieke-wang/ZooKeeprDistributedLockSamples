@@ -22,7 +22,8 @@ namespace ZooKeeprDistributedLockSample
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddZooKeeprDistributedLock(hostContext.Configuration);
-                    services.AddHostedService<Worker>();
+                    //services.AddHostedService<Worker>();
+                    services.AddHostedService<Worker2>();
                 });
     }
 }
