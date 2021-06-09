@@ -80,23 +80,27 @@ namespace ZooKeeprDistributedLockSample
             {
                 DataResult dataResult = await _zooKeeper.getDataAsync(DATA_PATH);
                 int productStock = BitConverter.ToInt32(dataResult.Data, 0);
-                _logger.LogInformation($"\n当前库存: {productStock}, {index} - {Thread.CurrentThread.ManagedThreadId}\n");
+                //_logger.LogInformation($"\n{index} - {Thread.CurrentThread.ManagedThreadId}, 当前库存: {productStock}\n");
+                Console.WriteLine($"\n{index} - {Thread.CurrentThread.ManagedThreadId}, 当前库存: {productStock}");
 
                 if (productStock > 0)
                 {
                     productStock--;
                     await _zooKeeper.setDataAsync(DATA_PATH, BitConverter.GetBytes(productStock));
 
-                    _logger.LogInformation($"\n{index} - 秒杀成功, {Thread.CurrentThread.ManagedThreadId} - {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
+                    //_logger.LogInformation($"\n{index} - {Thread.CurrentThread.ManagedThreadId} 秒杀成功, {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
+                    Console.WriteLine($"{index} - {Thread.CurrentThread.ManagedThreadId} 秒杀成功, {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
                 }
                 else
                 {
-                    _logger.LogWarning($"\n{index} - 已售罄, {Thread.CurrentThread.ManagedThreadId} - {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
+                    //_logger.LogWarning($"\n{index} - 已售罄, {Thread.CurrentThread.ManagedThreadId} - {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
+                    Console.WriteLine($"{index} - {Thread.CurrentThread.ManagedThreadId} 已售罄, {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
                 }
             }
             else
             {
-                _logger.LogWarning($"\n{index} - 秒杀失败, {Thread.CurrentThread.ManagedThreadId} - {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
+                //_logger.LogWarning($"\n{index} - 秒杀失败, {Thread.CurrentThread.ManagedThreadId} - {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
+                Console.WriteLine($"{index} - {Thread.CurrentThread.ManagedThreadId} 秒杀失败, {DateTime.Now:yyyy-MM-dd HH:mm:ss.fffff}\n");
             }
         }
 

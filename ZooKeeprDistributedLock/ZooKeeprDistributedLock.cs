@@ -1,3 +1,5 @@
+//# define OPEN_LOG
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -52,7 +54,9 @@ namespace ZooKeeprDistributedLock
                 }
                 sw.Stop();
                 TimeSpan ts2 = sw.Elapsed;
-                _logger.LogInformation($"zoo连接总共花费{ts2.TotalMilliseconds}ms.");
+#if OPEN_LOG
+                _logger.LogInformation($"zoo连接总共花费{ts2.TotalMilliseconds}ms."); 
+#endif
 
                 var stat = _zk.existsAsync(_root, false).ConfigureAwait(false).GetAwaiter().GetResult();
                 if (stat == null)
@@ -74,7 +78,9 @@ namespace ZooKeeprDistributedLock
         {
             await Task.Run(() =>
             {
-                _logger.LogInformation($"\nWatched Event: {@event.getPath()}; {@event.getState()}; {@event.get_Type()}\n");
+#if OPEN_LOG
+                _logger.LogInformation($"\nWatched Event: {@event.getPath()}; {@event.getState()}; {@event.get_Type()}\n"); 
+#endif
                 if (this._autoevent != null)
                 {
                     // 将事件状态设置为终止状态，允许一个或多个等待线程继续；如果该操作成功，则返回true；否则，返回false
@@ -95,7 +101,9 @@ namespace ZooKeeprDistributedLock
 
                 // 创建临时子节点
                 _myZnode = await _zk.createAsync($"{_root}/{_lockName}{splitStr}", new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-                _logger.LogInformation($"\n{_myZnode} 创建完成！\n");
+#if OPEN_LOG
+                _logger.LogInformation($"\n{_myZnode} 创建完成！\n"); 
+#endif
 
                 // 取出所有子节点         
                 ChildrenResult childrenResult = await _zk.getChildrenAsync(_root, false);
@@ -116,12 +124,16 @@ namespace ZooKeeprDistributedLock
                 //Array alockObjNodes = lockObjNodes.ToArray();
                 //Array.Sort(alockObjNodes);
                 lockObjNodes.Sort();
-                _logger.LogInformation($"\n{_myZnode}=={lockObjNodes[0]}\n");
+#if OPEN_LOG
+                _logger.LogInformation($"\n{_myZnode}=={lockObjNodes[0]}\n"); 
+#endif
 
                 if (_myZnode.Equals($"{_root}/{lockObjNodes[0]}"))
                 {
                     // 如果是最小的节点,则表示取得锁   
-                    _logger.LogInformation($"\n{_myZnode} 获取锁成功！\n");
+#if OPEN_LOG
+                    _logger.LogInformation($"\n{_myZnode} 获取锁成功！\n"); 
+#endif
                     return true;
                 }
 
@@ -168,7 +180,9 @@ namespace ZooKeeprDistributedLock
             // 判断比自己小一个数的节点是否存在,如果不存在则无需等待锁,同时注册监听
             if (stat != null)
             {
-                _logger.LogInformation($"\nThread {Thread.CurrentThread.Name} waiting for {_root}/{waitNode}\n");
+#if OPEN_LOG
+                _logger.LogInformation($"\nThread {Thread.CurrentThread.Name} waiting for {_root}/{waitNode}\n"); 
+#endif
                 _autoevent = new AutoResetEvent(false);
                 // 阻止当前线程，直到当前实例收到信号，使用 TimeSpan 度量时间间隔并指定是否在等待之前退出同步域
                 bool r = _autoevent.WaitOne(timeout);
@@ -187,7 +201,9 @@ namespace ZooKeeprDistributedLock
             {
                 if (string.IsNullOrWhiteSpace(_myZnode) == false)
                 {
-                    _logger.LogInformation($"\nunlock + {_myZnode}\n");
+#if OPEN_LOG
+                    _logger.LogInformation($"\nunlock + {_myZnode}\n"); 
+#endif
                     await _zk.deleteAsync(_myZnode, -1);
                     _myZnode = null;
                 }
