@@ -14,23 +14,21 @@ namespace ZooKeeprDistributedLockV2
 {
     internal class InitWorker : BackgroundService
     {
-        private readonly IOptions<ZooKeeprOptions> _zkOptions;
+        private readonly ZooKeeper _zk;
 
-        public InitWorker(IOptions<ZooKeeprOptions> zkOptions)
+        public InitWorker(ZooKeeper zk)
         {
-            _zkOptions = zkOptions;
+            _zk = zk;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var _zk = new ZooKeeper(_zkOptions.Value.ConnectionString, 50000, new DefaultWatcher());
             var stat = await _zk.existsAsync(ZooKeeprDistributedLock.Root, false).ConfigureAwait(false);
             if (stat == null)
             {
                 // 创建根节点                    
                 await _zk.createAsync(ZooKeeprDistributedLock.Root, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT).ConfigureAwait(false);
             }
-            await _zk.closeAsync().ConfigureAwait(false);
         }
     }
 }

@@ -14,8 +14,8 @@ namespace SeckillConsoleClient
         {
             try
             {
-                //var client = new RestClient("http://localhost:5000");
-                var client = new RestClient("http://192.168.199.133:5000");
+                var client = new RestClient("http://localhost:5000");
+                //var client = new RestClient("http://192.168.199.133:5000");
                 await InitAsync(client);
                 await GetStockAsync(client);
                 await StartSeckillAsync(client);
@@ -31,7 +31,8 @@ namespace SeckillConsoleClient
 
         static async Task InitAsync(RestClient client)
         {
-            var request = new RestRequest("/api/Seckill/Init", Method.GET);
+            var request = new RestRequest("/api/SeckillV2/Init", Method.GET);
+            //var request = new RestRequest("/api/Seckill/Init", Method.GET);
             request.AddQueryParameter("stock", Number_of_customers.ToString());
             string res = await client.GetAsync<string>(request);
             Console.WriteLine(res);
@@ -39,7 +40,8 @@ namespace SeckillConsoleClient
 
         static async Task GetStockAsync(RestClient client)
         {
-            var request = new RestRequest("/api/Seckill/GetStock", Method.GET);
+            var request = new RestRequest("/api/SeckillV2/GetStock", Method.GET);
+            //var request = new RestRequest("/api/Seckill/GetStock", Method.GET);
             string res = await client.GetAsync<string>(request);
             Console.WriteLine(res);
         }
@@ -69,7 +71,8 @@ namespace SeckillConsoleClient
         {
             try
             {
-                var request = new RestRequest("/api/Seckill/Seckill", Method.GET);
+                var request = new RestRequest("/api/SeckillV2/Seckill", Method.GET);
+                //var request = new RestRequest("/api/Seckill/Seckill", Method.GET);
                 request.AddQueryParameter("clientIdentity", Guid.NewGuid().ToString());
                 string res = await client.GetAsync<string>(request);
                 Console.WriteLine(res);
