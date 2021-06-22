@@ -8,7 +8,7 @@ set n=0
 set /a n+=1
 
 :: start /min "ProducerSeckill%n%" dotnet ZooKeeprDistributedLockSample.dll --minute=36
-start "ProducerSeckill%n%" dotnet ZooKeeprDistributedLockSample.dll --minute=54
+start "ProducerSeckill%n%" dotnet ZooKeeprDistributedLockSample.dll
 
 if %n% == 3 (
 :: @pause

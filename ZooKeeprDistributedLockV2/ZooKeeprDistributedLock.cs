@@ -12,14 +12,14 @@ using Microsoft.Extensions.Options;
 
 using org.apache.zookeeper;
 
-namespace ZooKeeprDistributedLock
+namespace ZooKeeprDistributedLockV2
 {
     public class ZooKeeprDistributedLock : Watcher, IDisposable, IAsyncDisposable
     {
         private ILogger<ZooKeeprDistributedLock> _logger;
         //private IOptions<ZooKeeprOptions> _zkOptions;
         private ZooKeeper _zk;
-        private string _root = "/locks"; //根        
+        internal const string Root = "/locks"; //根        
         private string _lockName; //竞争资源的标志        
         private string _waitNode; //等待前一个锁        
         private string _myZnode; //当前锁                 
@@ -44,31 +44,75 @@ namespace ZooKeeprDistributedLock
             try
             {
                 _zk = new ZooKeeper(zkOptions.Value.ConnectionString, _sessionTimeout, this);
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
                 while (true)
                 {
                     ZooKeeper.States state = _zk.getState();
                     if (state == ZooKeeper.States.CONNECTING) { break; }
                     if (state == ZooKeeper.States.CONNECTED) { break; }
                 }
-                sw.Stop();
-                TimeSpan ts2 = sw.Elapsed;
+                //sw.Stop();
+                //TimeSpan ts2 = sw.Elapsed;
 #if OPEN_LOG
                 _logger.LogInformation($"zoo连接总共花费{ts2.TotalMilliseconds}ms."); 
 #endif
 
-                var stat = _zk.existsAsync(_root, false).ConfigureAwait(false).GetAwaiter().GetResult();
-                if (stat == null)
-                {
-                    // 创建根节点                    
-                    _zk.createAsync(_root, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT).ConfigureAwait(false).GetAwaiter().GetResult();
-                }
+                //var stat = _zk.existsAsync(Root, false).ConfigureAwait(false).GetAwaiter().GetResult();
+                //if (stat == null)
+                //{
+                //    // 创建根节点                    
+                //    _zk.createAsync(Root, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT).ConfigureAwait(false).GetAwaiter().GetResult();
+                //}
             }
-            catch (KeeperException e)
+            catch (KeeperException)
             {
-                throw e;
+                throw;
             }
+        }
+
+        private Task<bool> WaitConnectionAsync(TimeSpan timeout)
+        {
+            return Task.Run(() => {
+                Stopwatch sw = Stopwatch.StartNew();
+                while (true)
+                {
+                    ZooKeeper.States state = _zk.getState();
+                    if (state == ZooKeeper.States.CONNECTING) { break; }
+                    if (state == ZooKeeper.States.CONNECTED) { break; }
+                    if (sw.Elapsed > timeout)
+                    {
+                        sw.Stop();
+                        return false;
+                    }
+
+                    Thread.Sleep(0);
+                }
+                sw.Stop();
+
+                return true;
+            });
+        }
+
+        private bool WaitConnection(TimeSpan timeout)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            while (true)
+            {
+                ZooKeeper.States state = _zk.getState();
+                if (state == ZooKeeper.States.CONNECTING) { break; }
+                if (state == ZooKeeper.States.CONNECTED) { break; }
+                if (sw.Elapsed > timeout)
+                {
+                    sw.Stop();
+                    return false;
+                }
+
+                Thread.Sleep(0);
+            }
+            sw.Stop();
+
+            return true;
         }
 
         /// <summary>        
@@ -100,13 +144,13 @@ namespace ZooKeeprDistributedLock
                 //}
 
                 // 创建临时子节点
-                _myZnode = await _zk.createAsync($"{_root}/{_lockName}{splitStr}", new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL).ConfigureAwait(false);
+                _myZnode = await _zk.createAsync($"{Root}/{_lockName}{splitStr}", new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL).ConfigureAwait(false);
 #if OPEN_LOG
                 _logger.LogInformation($"\n{_myZnode} 创建完成！\n"); 
 #endif
 
                 // 取出所有子节点         
-                ChildrenResult childrenResult = await _zk.getChildrenAsync(_root, false).ConfigureAwait(false);
+                ChildrenResult childrenResult = await _zk.getChildrenAsync(Root, false).ConfigureAwait(false);
                 IList<string> subNodes = childrenResult.Children;
                 if (subNodes == null || subNodes.Count == 0) return false;
 
@@ -128,7 +172,7 @@ namespace ZooKeeprDistributedLock
                 _logger.LogInformation($"\n{_myZnode}=={lockObjNodes[0]}\n"); 
 #endif
 
-                if (_myZnode.Equals($"{_root}/{lockObjNodes[0]}"))
+                if (_myZnode.Equals($"{Root}/{lockObjNodes[0]}"))
                 {
                     // 如果是最小的节点,则表示取得锁   
 #if OPEN_LOG
@@ -158,6 +202,13 @@ namespace ZooKeeprDistributedLock
         {
             try
             {
+                //bool connected = WaitConnection(timeout);
+                //if (connected == false)
+                //{
+                //    Console.WriteLine("连接超时");
+                //    return false;
+                //}
+
                 if (await TryLockAsync().ConfigureAwait(false)) return true;
                 return await WaitForLockAsync(_waitNode, timeout).ConfigureAwait(false);
             }
@@ -176,7 +227,7 @@ namespace ZooKeeprDistributedLock
         /// <returns>等待结果</returns>
         protected async virtual Task<bool> WaitForLockAsync(string waitNode, TimeSpan timeout)
         {
-            var stat = await _zk.existsAsync($"{_root}/{waitNode}", true).ConfigureAwait(false); // !!!
+            var stat = await _zk.existsAsync($"{Root}/{waitNode}", true).ConfigureAwait(false); // !!!
             // 判断比自己小一个数的节点是否存在,如果不存在则无需等待锁,同时注册监听
             if (stat != null)
             {
