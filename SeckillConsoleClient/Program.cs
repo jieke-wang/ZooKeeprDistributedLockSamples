@@ -8,7 +8,7 @@ namespace SeckillConsoleClient
 {
     class Program
     {
-        const int Number_of_customers = 10;
+        const int Number_of_customers = 30;
 
         static async Task Main(string[] args)
         {
@@ -48,15 +48,15 @@ namespace SeckillConsoleClient
 
         static async Task StartSeckillAsync(RestClient client)
         {
-            //DateTime now = DateTime.Now;
-            //DateTime startTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0).AddMinutes(1);
-            //TimeSpan waitTime = startTime - now;
-            //int waitSecond = (int)Math.Ceiling(waitTime.TotalSeconds);
-            //Console.WriteLine($"秒杀开始时间: {startTime}, 等待时间: {waitSecond}s");
-            //await Task.Delay(waitSecond * 1000);
-            //Console.WriteLine("开始秒杀");
+            DateTime now = DateTime.Now;
+            DateTime startTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0).AddMinutes(1);
+            TimeSpan waitTime = startTime - now;
+            int waitSecond = (int)Math.Ceiling(waitTime.TotalSeconds);
+            Console.WriteLine($"秒杀开始时间: {startTime}, 等待时间: {waitSecond}s");
+            await Task.Delay(waitSecond * 1000);
+            Console.WriteLine("开始秒杀");
 
-            int maxCustomer = Number_of_customers * 3;
+            int maxCustomer = Number_of_customers;
             Task[] tasks = new Task[maxCustomer];
             for (int i = 0; i < maxCustomer; i++)
             {

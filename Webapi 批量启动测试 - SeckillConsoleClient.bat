@@ -10,7 +10,7 @@ set /a n+=1
 :: start /min "ProducerSeckill%n%" dotnet SeckillConsoleClient.dll
 start "ProducerSeckill%n%" dotnet SeckillConsoleClient.dll
 
-if %n% == 1 (
+if %n% == 3 (
 :: @pause
 exit
 )

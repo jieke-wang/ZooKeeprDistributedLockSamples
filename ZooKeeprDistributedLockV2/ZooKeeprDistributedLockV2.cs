@@ -13,6 +13,8 @@ namespace ZooKeeprDistributedLockV2
 {
     public class ZooKeeprDistributedLockV2 : Watcher, IDisposable, IAsyncDisposable
     {
+        //static Random random = new Random(Environment.TickCount);
+
         private readonly ILogger<ZooKeeprDistributedLockV2> _logger;
         private readonly ZooKeeper _zooKeeper;
         private AutoResetEvent _autoevent;
@@ -165,6 +167,7 @@ namespace ZooKeeprDistributedLockV2
         {
             try
             {
+                //await Task.Delay(random.Next(10, 200));
                 await CreateLockAsync().ConfigureAwait(false);
                 return await WaitForLockAsync(_waitNode, timeout).ConfigureAwait(false);
             }
